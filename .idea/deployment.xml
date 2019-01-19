@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="spuccio@10.39.191.39:22" autoUploadExternalChanges="true">
+  <component name="PublishConfigData" autoUpload="Always" serverName="hpcserver1" autoUploadExternalChanges="true">
     <serverData>
+      <paths name="hpcserver1">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/pycharm_project_982" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="spuccio@10.39.191.39:22">
         <serverdata>
           <mappings>

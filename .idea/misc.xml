@@ -3,5 +3,5 @@
   <component name="JavaScriptSettings">
     <option name="languageLevel" value="ES6" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.7.1 (sftp://spuccio@10.39.191.39:22/home/spuccio/miniconda3/envs/chipseq_env/bin/python)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.6.7 (sftp://spuccio@10.39.191.39:22/home/spuccio/miniconda3/envs/chipseq_env/bin/python)" project-jdk-type="Python SDK" />
 </project>
