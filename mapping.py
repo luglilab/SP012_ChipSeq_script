@@ -3,6 +3,7 @@ import subprocess
 import sys
 # set path tool
 threads = "40"
+multimap = "4"
 GRCh38p12indexpath = "/home/spuccio/AnnotationBowtie2/Homo_sapiens/GencodeGRCh38p12"
 bowtiebuild2path = "/home/spuccio/miniconda3/envs/chipseq_env/bin/bowtie2-build"
 bowtie2path = "/home/spuccio/miniconda3/envs/chipseq_env/bin/bowtie2"
@@ -48,7 +49,7 @@ def checkindex(indexpath, fastafile, indexname):
 
 def bowtie2mapping(indexname, fastqname, samname):
     try:
-        subprocess.check_call(" ".join([bowtie2path, "-p", threads, "-q", "--local", "-x", indexname,
+        subprocess.check_call(" ".join([bowtie2path, "-p", threads, "-q", "--local", "-k", multimap, "-x", indexname,
                                         "".join([raw_data_dir, fastqname]), "-S", "".join([mappingout, samname])]),
                               shell=True)
     except subprocess.CalledProcessError:
