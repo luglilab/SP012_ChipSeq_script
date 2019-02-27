@@ -88,4 +88,4 @@ if __name__ == "__main__":
                   outputbam="/".join([SAMpath, key + ".bam"]),
                   rmdupbam="/".join([SAMpath, key + "_rmdup.bam"]),
                   picardmetrix="/".join([SAMpath, key + "_rmdup.txt"]),
-                  logfile="/".join([SAMpath, key + ".log"]))
+                  logfile="/".join([SAMpath, key + "_postalign.log"]))

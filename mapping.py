@@ -2,12 +2,12 @@ import os
 import subprocess
 import sys
 import shutil
-import traceback
 # set command
 command1 = "{BOWTIE2BUILD} --threads {THREADS} {FASTQFILE} {INDEXNAME}"
-command2 = "{BOWTIE2ALIGN} -p {THREADS} -q --local -k {MULTIMAP} -x {INDEXNAME} {RAWFASTQ} -S {OUTPUTSAM} 2>{LOGFILE}"
-command3 = "{SAMTOOLS} view -@ {THREADS} -hbS {SAMFILE} > {BAMFILE}"
-
+command2 = "{BOWTIE2ALIGN} -p {THREADS} --mm -k {MULTIMAP} -X {MAXFRAGLEN} " \
+           "-x {INDEXNAME} -U {RAWFASTQ} -S {OUTPUTSAM} 2>{LOGFILE} > {EXECUTIONINFO}"
+command3 = "{SAMTOOLS} view -@ {THREADS} -hbS {SAMFILE} -o {BAMFILE}"
+command4 = "{MULTIQC} -o {MULTIQCOUTDIR} -i {MULTIQCNAME} {FASTQCOUTFOLDER}"
 
 def createdir(dirpath):
     """
@@ -46,40 +46,44 @@ def checkindex(indexpath, processor, fastafile, indexname):
     return indexname
 
 
-def bowtie2mapping(pathwbowtie2, processor, multimappar, indexname, fastqname, samname, logfile):
+def bowtie2mapping(pathwbowtie2, processor, multimappar, maxfrag, indexname, fastqname, samname, logfile, secondlog):
     """
 
     :param pathwbowtie2:
     :param processor:
     :param multimappar:
+    :param maxfrag
     :param indexname:
     :param fastqname:
     :param samname:
     :param logfile:
+    :param secondlog:
     :return:
     """
     try:
         os.system(command2.format(BOWTIE2ALIGN=pathwbowtie2, THREADS=processor, MULTIMAP=multimappar,
+                                  MAXFRAGLEN=maxfrag,
                                   INDEXNAME=indexname, RAWFASTQ=fastqname, OUTPUTSAM=samname,
-                                  LOGFILE=logfile))
-    except traceback:
+                                  LOGFILE=logfile, EXECUTIONINFO=secondlog))
+    except [IOError, ValueError]:
         print("ERROR.Mapping of %s with bowtie2 failed. Stop execution." % fastqname)
         sys.exit(1)
     else:
         print("Mapping of %s with bowtie2 complete." % fastqname)
 
 
-def sam2bam(inputsam, processor, bamfile):
+def sam2bam(pathsamtools, processor, inputsam, bamfile):
     """
 
+    :param pathsamtools:
     :param inputsam:
     :param processor:
     :param bamfile:
     :return:
     """
     try:
-        os.system(command3.format(SAMTOOLS=inputsam, THREADS=processor, BAMFILE=bamfile))
-    except traceback:
+        os.system(command3.format(SAMTOOLS=pathsamtools, THREADS=processor, SAMFILE=inputsam, BAMFILE=bamfile))
+    except [IOError, ValueError]:
         print("ERROR.Conversion of %s with samtools failed. Stop execution." % inputsam)
         sys.exit(1)
     else:
@@ -95,7 +99,7 @@ def multiqc(multiqcpath, multiqcfolderout, namemultiqc, fastqcfolderout):
     :param fastqcfolderout:
     :return:
     """
-    os.system(command2.format(MULTIQC=multiqcpath,
+    os.system(command4.format(MULTIQC=multiqcpath,
                               MULTIQCOUTDIR=multiqcfolderout,
                               MULTIQCNAME=namemultiqc,
                               FASTQCOUTFOLDER=fastqcfolderout))
@@ -105,6 +109,7 @@ if __name__ == "__main__":
     # set path tool
     threads = "40"
     multimap = "4"  # the multimapping flag
+    fraglen = "2000"
     GRCh38p12indexpath = "/home/spuccio/AnnotationBowtie2/Homo_sapiens/GencodeGRCh38p12"
     projectdir = "/mnt/datadisk2/spuccio/SP012_ChipSeq_IRF8_MEOX1/"
     mappingout = "/mnt/datadisk2/spuccio/SP012_ChipSeq_IRF8_MEOX1/Mapping/"
@@ -123,14 +128,19 @@ if __name__ == "__main__":
     createdir(mappingout)
     for key, value in raw_fastq.items():
         bowtie2mapping(pathwbowtie2=shutil.which('bowtie2'), processor=threads,
-                       multimappar=multimap, indexname="".join([GRCh38p12indexpath, "/", index]),
+                       multimappar=multimap,
+                       maxfrag=fraglen,
+                       indexname="".join([GRCh38p12indexpath, "/", index]),
                        fastqname="".join([raw_data_dir, value]),
                        samname="".join([mappingout, key, ".sam"]),
-                       logfile="".join([mappingout, key, ".log"]))
-        sam2bam(inputsam="".join([mappingout, key, ".sam"]),
+                       logfile="".join([mappingout, key, ".log"]),
+                       secondlog="".join([mappingout, key, ".execution.log"]))
+        sam2bam(pathsamtools=shutil.which('samtools'),
                 processor=threads,
+                inputsam="".join([mappingout, key, ".sam"]),
                 bamfile="".join([mappingout, key, ".bam"]))
-        multiqc(multiqcpath=shutil.which('multiqc'),
-                multiqcfolderout=multiout,
-                namemultiqc="fastqc_mapping_report",
-                fastqcfolderout=mappingout)
+
+    multiqc(multiqcpath=shutil.which('multiqc'),
+            multiqcfolderout=multiout,
+            namemultiqc="fastqc_mapping_report",
+            fastqcfolderout=mappingout)
